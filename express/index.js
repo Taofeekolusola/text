@@ -1,3 +1,51 @@
+// queries.js
+const db = require("./db");
+
+exports.getAllUsers = async () => {
+  const res = await db.query("SELECT * FROM users");
+  return res.rows;
+};
+
+exports.getUserById = async (id) => {
+  const res = await db.query("SELECT * FROM users WHERE id = $1", [id]);
+  return res.rows[0];
+};
+
+exports.createUser = async ({ name, email, age }) => {
+  const res = await db.query(
+    "INSERT INTO users (name, email, age) VALUES ($1, $2, $3) RETURNING *",
+    [name, email, age]
+  );
+  return res.rows[0];
+};
+
+exports.updateUser = async (id, { name, email, age }) => {
+  const res = await db.query(
+    "UPDATE users SET name = $1, email = $2, age = $3 WHERE id = $4 RETURNING *",
+    [name, email, age, id]
+  );
+  return res.rows[0];
+};
+
+exports.deleteUser = async (id) => {
+  await db.query("DELETE FROM users WHERE id = $1", [id]);
+};
+// db.js
+const { Client } = require("pg");
+
+const client = new Client({
+  host: "localhost",
+  user: "postgres",
+  port: 5432,
+  password: "123Adeshina12?",
+  database: "postgres",
+});
+
+client.connect()
+  .then(() => console.log("PostgreSQL connected"))
+  .catch(err => console.error("Connection error", err.stack));
+
+
 // index.js
 const express = require("express");
 const app = express();
@@ -47,3 +95,5 @@ app.delete("/users/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+module.exports = client;
